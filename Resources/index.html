@@ -1,0 +1,48 @@
+<html>
+<head>
+  <script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script type="text/javascript">
+
+  function fc_call(code) {
+    console.log("CALL " + code)
+    var xxx = $.get("/dolua?code="+code);
+    return false;
+  }
+
+  </script>
+  <style type="text/css">
+      div.buttoncell {
+          display: inline-block;
+          width: 80px;
+          height: 80px;
+          box-sizing: border-box;
+      }
+      .buttoncell button {
+          width: 100%;
+          height: 100%;
+      }
+  </style>
+</head>
+<body>
+    <h2><img src="/assets/fc-icon-03@2.png">Finale Controller</h2>
+   <div class="buttoncell">
+     <button onclick="return fc_call('0024');">Swell</button>
+   </div>
+   <div class="buttoncell">
+     <button onclick="return fc_call('0022');">Cresc</button>
+   </div>
+   <div class="buttoncell">
+     <button onclick="return fc_call('0023');">Dim</button>
+   </div>
+   <div class="buttoncell">
+     <button onclick="return fc_call('0009');">ppp start</button>
+   </div>
+   <div class="buttoncell">
+     <button onclick="return fc_call('0008');">pp start</button>
+   </div>
+   <div class="buttoncell">
+     <button onclick="return fc_call('0007');">p start</button>
+   </div>
+</body>
+
+
