@@ -45,83 +45,84 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     var clickable: [String: UIElement] = [:]
     
-    
-    func clickItem(app: UIElement, name: String, code: String) {
+    // update profile to context path (array) and then click item (string)
+    func clickItem(app: UIElement, context: [String], name: String, code: String) {
+        applog.debug("CLICKITEM: \(context) -> \(name)")
         
-        let finaleactive = try? (self.finale?.attribute(.frontmost)! as Bool?)
+        let finaleactive = try? (finale?.attribute(.frontmost)! as Bool?)
         
-        guard (finaleactive != nil && finaleactive == true) else {
-            alert("Finale must be running and at the front.")
+        guard finaleactive != nil, finaleactive == true else {
+            AppDelegate.alert("Finale must be running and at the front.")
             return
         }
         
         let menubar: UIElement = try! app.attribute(.menuBar)!
+        let fullname = context.joined(separator: ".") + "." + name
         
-        if let xelement = clickable[name] {
+        if let xelement = clickable[fullname] {
             keyseq = code
-            applog.debug("cached menu click: \(name)")
+            applog.debug("cached menu click: \(fullname)")
             try! xelement.performAction(.pick)
             wait()
             usleep(50000)
             return
         }
-       
+        
         let mitems: [AXUIElement] = try! menubar.attribute(.children)!
        
         // NSLog("Menu XXX \(mitems)")
        
-        let uilist = mitems
+        var uilist = mitems
         // NSLog("ATTRS \(uilist)")
-       
-        for uie_x in uilist {
-            let uie = UIElement(uie_x)
-            let vxvx: NSString = try! uie.attribute(.title)!
-           
-            if vxvx.isEqual(to: "Plug-ins") {
-                applog.debug("Plugins Element: \(uie)")
-                // NSLog("Plugins title \(vxvx)")
-                // get the menu under plugins
-                let muilist_x: [AXUIElement] = try! uie.attribute(.children)!
-                let themenu: UIElement = UIElement(muilist_x.first!)
-               
-                // applog.debug("MENU MEMBERS: \(themenu)")
-           
-                // get member of menu members
-                let muimembers: [AXUIElement] = try! themenu.attribute(.children)!
-                // applog.debug("MENU MEMBERS 2: \(muimembers)")
-               
-                for mum_x in muimembers {
-                    let mum: UIElement = UIElement(mum_x)
-                    let mxvx: String = try! mum.attribute(.title)!
-                    // applog.debug("Plugin member: \(mxvx)")
-                    if mxvx.isEqual("JW Lua") {
-                        // applog.debug("MENU ELEMENT 3: \(mvvx)")
-                        // applog.debug("JW Lua Element: \(mxvx)")
-                        let mum_menu_x: [AXUIElement] = try! mum.attribute(.children)!
-                        let mum_menu: UIElement = UIElement(mum_menu_x.first!)
-                       
-                        // applog.debug("JW Lua Menu: \(mum_menu)")
-                        // get menu members
-                        let mum_members: [AXUIElement] = try! mum_menu.attribute(.children)!
-                        // applog.debug("JW Lua Menu MEMBERS: \(mum_members)")
-                       
-                        for lua_x in mum_members {
-                            let lua = UIElement(lua_x)
-                            let luas: NSString = try! lua.attribute(.title)!
-                            // applog.debug("LUA \(luas)")
-                            if luas.isEqual(name) {
-                                // applog.debug("MENU ITEM ATTR: \(try! lua.attributes())")
-                                keyseq = code
-                                clickable[name] = lua
-                                try! lua.performAction(.pick)
-                                wait()
-                                usleep(50000)
-                            }
-                        }
-                    }
+        
+        /*
+         set current target to first item, current source to main menu bar
+         move current to next item, current source to found menu
+         */
+                
+        for target in context {
+            var found = false
+            applog.debug("MENU CHECK \(target)")
+            for uie_x in uilist {
+                let uie = UIElement(uie_x)
+                let vxvx: NSString = try! uie.attribute(.title)!
+                        
+                if vxvx.isEqual(to: target) {
+                    applog.debug("UI Element Match: \(vxvx) = \(target)")
+                    let muilist_x: [AXUIElement] = try! uie.attribute(.children)!
+                    let themenu: UIElement = UIElement(muilist_x.first!)
+                                
+                    applog.debug("MENU \(target) MEMBERS: \(themenu)")
+                            
+                    // get member of menu members
+                    uilist = try! themenu.attribute(.children)!
+                    found = true
+                    break
                 }
             }
+            if !found {
+                applog.info("MENU - \(target) not found")
+                return
+            }
         }
+        
+        /*
+         if we get here, we've found the context: all we need to do is click
+         */
+        for lua_x in uilist {
+            let lua = UIElement(lua_x)
+            let luas: NSString = try! lua.attribute(.title)!
+            // applog.debug("LUA \(luas)")
+            if luas.isEqual(name) {
+                applog.debug("MENU ITEM ATTR: \(try! lua.attributes())")
+                keyseq = code
+                clickable[fullname] = lua
+                try! lua.performAction(.pick)
+                wait()
+                usleep(50000)
+            }
+        }
+        
     }
     
     func doBox(app: AXSwift.Application, code: String) {
@@ -217,15 +218,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         httpserver = RestHandler(port: theport)
-        plugin = TPPlugin(address: "127.0.0.1", port: 12136)
+        plugin = TPPlugin(address: "127.0.0.1", port: 12136, owner: self)
         
         if let xplug = plugin {
             xplug.addhandler(key: "com.music3149.jsplugin.cat_action1.luacode") {
                 code in
-                applog.debug("CONFIG HANDLER: \(code)")
+                applog.debug("LUA HANDLER: \(code)")
                 if let xapp = self.finale {
                     self.triggered = true
-                    self.clickItem(app: xapp, name: "JetStream Finale Controller", code: code)
+                    self.clickItem(app: xapp, context: ["Plug-ins", "JW Lua"], name: "JetStream Finale Controller", code: code[0].value)
+                    return true
+                } else {
+                    return false
+                }
+            }
+            xplug.addhandler(key: "com.music3149.jsplugin.cat_action2.menu") {
+                code in
+                applog.debug("MENU HANDLER: \(code)")
+                // work out the code values
+                var context: [String] = []
+                var target: String = ""
+                for cc in code {
+                    if cc.id == "com.music3149.jsplugin.cat_action2.context" {
+                        context = cc.value.components(separatedBy: "|")
+                        //applog.debug("MENU CONTEXT: \(context)")
+                    } else if cc.id == "com.music3149.jsplugin.cat_action2.target" {
+                        target = cc.value
+                        //applog.debug("MENU TARGET: \(target)")
+                    }
+                }
+                
+                if let xapp = self.finale {
+                    //self.triggered = true
+                    self.clickItem(app: xapp, context: context, name: target, code: "")
                     return true
                 } else {
                     return false
@@ -239,7 +264,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 code in
                 if let xapp = self.finale {
                     self.triggered = true
-                    self.clickItem(app: xapp, name: "JetStream Finale Controller", code: code)
+                    self.clickItem(app: xapp, context: ["Plug-ins", "JW Lua"], name: "JetStream Finale Controller", code: code)
                     return true
                 } else {
                     return false
@@ -249,7 +274,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 code in
                 if let xapp = self.finale {
                     self.triggered = true
-                    self.clickItem(app: xapp, name: "JetStream Finale Controller", code: code)
+                    self.clickItem(app: xapp, context: ["Plug-ins", "JW Lua"], name: "JetStream Finale Controller", code: code)
+                    return true
+                } else {
+                    return false
+                }
+            }
+            xhttp.addhandler(key: "/domenu") {
+                code in
+                if let xapp = self.finale {
+                    self.triggered = true
+                    let items = code.components(separatedBy: "|")
+                    applog.debug("MENU CALL: \(code) -> \(items)")
+                    self.clickItem(app: xapp, context: items.dropLast(), name: items.last!, code: "")
                     return true
                 } else {
                     return false
@@ -258,6 +295,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             xhttp.addhandler(key: "/focus") {
                 _ in
                 try! self.finale?.setAttribute(.frontmost, value: true)
+                return true
+            }
+            
+            xhttp.addhandler(key: "/tpconnect") {
+                _ in
+                self.plugin?.reinit()
                 return true
             }
         
@@ -303,20 +346,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         swindler.on { (event: WindowFrameChangedEvent) in
             applog.debug("Frame changed from \(event.oldValue) to \(event.newValue)," +
-                  " external: \(event.external)")
+                " external: \(event.external)")
         }
         swindler.on { (event: WindowDestroyedEvent) in
             applog.debug("window destroyed: \(event.window.title.value)")
         }
         swindler.on { (event: ApplicationMainWindowChangedEvent) in
             applog.debug("new main window: \(String(describing: event.newValue?.title.value))." +
-                  " [old: \(String(describing: event.oldValue?.title.value))]")
+                " [old: \(String(describing: event.oldValue?.title.value))]")
             self.frontmostWindowChanged()
         }
         swindler.on { (event: FrontmostApplicationChangedEvent) in
             let bundle = event.newValue?.bundleIdentifier
             applog.debug("new frontmost app: \(event.newValue?.bundleIdentifier ?? "unknown")." +
-                  " [old: \(event.oldValue?.bundleIdentifier ?? "unknown")]")
+                " [old: \(event.oldValue?.bundleIdentifier ?? "unknown")]")
             
             if let xbundle = bundle {
                 if xbundle.isEqual("com.makemusic.Finale26") {
@@ -346,16 +389,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
-    var alerter: NSAlert? = nil
+    static var alerter: NSAlert?
     
-    func alert(_ message: String) {
+    static func alert(_ message: String) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
             self.alerter = NSAlert()
             self.alerter?.messageText = message
-        // alert.informativeText = text
+            // alert.informativeText = text
             self.alerter?.alertStyle = .warning
             self.alerter?.addButton(withTitle: "OK")
-        // alert.addButton(withTitle: "Cancel")
+            // alert.addButton(withTitle: "Cancel")
             _ = self.alerter?.runModal()
         }
     }
@@ -392,7 +435,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     @objc func makePlugin(_ sender: Any?) {
         plugin.install()
-        alert("Restart Touch Portal to accept the plugin. Then choose menu item 'Connect to Touch Portal..'")
+        AppDelegate.alert("Restart Touch Portal to accept the plugin. Then choose menu item 'Connect to Touch Portal..'")
         return
     }
     
