@@ -7,19 +7,19 @@
 //
 
 import Foundation
-import SwiftSocket
 
 class TPPlugin {
     var tpclient: TCPClient?
-    typealias Callback = (_ code: String) -> Bool
+    typealias Callback = (_ code: [TPPlugin.TPRequestData]) -> Bool
     var keymap: [String: Callback] = [:]
     let thislog: Logger = applog.getsub(location: "tppplugin")
     let defaults = UserDefaults.standard
     var tplocation: String
     var pluginlocation: String
     var tpaddress: String
-    var tpport: Int32
+    var tpport: UInt16
     var tpplugid: String
+    var owner: AppDelegate?
 
     struct TPPair: Codable {
         var type = "pair"
@@ -52,7 +52,7 @@ class TPPlugin {
         var data: [TPRequestData]
     }
 
-    init(address: String, port: Int32) {
+    init(address: String, port: UInt16, owner: AppDelegate?) {
         if let tppresent = defaults.string(forKey: "FCTPLocation") {
             self.tplocation = tppresent
         } else {
@@ -64,15 +64,15 @@ class TPPlugin {
         self.tpplugid = ""
 
         if FileManager.default.fileExists(atPath: NSString.path(withComponents: [self.pluginlocation, "entry.tp"])) {
-            self.tpclient = TCPClient(address: address, port: port)
+            self.tpclient = TCPClient(host: address, port: port)
         } else {
             self.thislog.info("INIT: No Touch Portal plugin descriptor found in \(self.pluginlocation)")
         }
     }
-    
+
     func reinit() {
         if FileManager.default.fileExists(atPath: NSString.path(withComponents: [self.pluginlocation, "entry.tp"])) {
-            self.tpclient = TCPClient(address: tpaddress, port: tpport)
+            self.tpclient = TCPClient(host: self.tpaddress, port: self.tpport)
             self.start(plugid: self.tpplugid)
         } else {
             self.thislog.info("REINIT: No Touch Portal plugin descriptor found in \(self.pluginlocation)")
@@ -90,78 +90,41 @@ class TPPlugin {
             do {
                 try FileManager.default.createDirectory(atPath: self.pluginlocation, withIntermediateDirectories: true)
                 try FileManager.default.copyItem(atPath: tpdescriptor, toPath: self.pluginlocation + "/entry.tp")
-                
+
             } catch {
                 self.thislog.info("Create plugin folder or copy failed: \(error)")
             }
         }
     }
-    
 
     func start(plugid: String) {
         self.tpplugid = plugid
-        switch self.tpclient?.connect(timeout: 10) {
-        case .success:
-            // Connection successful 🎉
-            self.thislog.debug("TP Connection OK")
-            let pairer = TPPair(id: plugid)
-            do {
-                let pj1 = try JSONEncoder().encode(pairer)
-                if let pj2 = String(data: pj1, encoding: .utf8) {
-                    switch self.tpclient!.send(string: pj2 + "\n") {
-                    case .success:
-                        // timeout is needed otherwise read is nonblocking
-                        if let reply = tpclient!.read(1024*10, timeout: 5) {
-                            let stuff = String(bytes: reply, encoding: .utf8)!
-                            // self.thislog.debug("REPLY: \(stuff)")
-                            // check reply, then dispatch listener on socket
-                            let rdata = try! JSONDecoder().decode(TPPairAck.self, from: stuff.data(using: .utf8)!)
-                            self.thislog.debug("REPLY DATA: \(rdata)")
-                            self.handleButtons()
-                        } else {
-                            self.thislog.error("READ FAIL")
-                        }
-                    case .failure:
-                        self.thislog.error("SEND FAIL:")
-                    }
-                } else {
-                    self.thislog.error("encoding failure")
-                }
-            } catch {
-                self.thislog.error("Failure!!!!")
-            }
-        case .failure(let error):
-            // 💩
-            self.thislog.error("TP Connection Fail - \(error)")
-        case .none:
-            self.thislog.error("TP Client Fail")
-        }
-    }
-
-    func handleButtons() {
-        DispatchQueue.global(qos: .background).async {
-            repeat {
-                if let request = self.tpclient!.read(1024*10, timeout: 10) {
-                    let stuff = String(bytes: request, encoding: .utf8)!
-                    self.thislog.debug("REQUEST: \(stuff)")
-                    // check reply, then dispatch listener on socket
+        self.tpclient?.receiver = {
+            data in
+            if let stuff = String(bytes: data, encoding: .utf8) {
+                // self.thislog.debug("REPLY: \(stuff)")
+                // check reply, then dispatch listener on socket
+                do {
+                    let rdata = try JSONDecoder().decode(TPPairAck.self, from: stuff.data(using: .utf8)!)
+                    self.thislog.debug("PAIR REPLY DATA: \(rdata)")
+                } catch let Swift.DecodingError.keyNotFound(cause) {
                     do {
                         let rdata = try JSONDecoder().decode(TPRequest.self, from: stuff.data(using: .utf8)!)
                         self.thislog.debug("REQUEST DATA: \(rdata)")
                         if rdata.type == "action" {
                             if let dh = self.keymap[rdata.actionId] {
                                 self.thislog.debug("CALL HANDLER FOR \(rdata.actionId)")
-                                _ = dh(rdata.data[0].value)
+                                _ = dh(rdata.data)
                             }
                         }
-                    } catch Swift.DecodingError.keyNotFound(let cause) {
+                    } catch let Swift.DecodingError.keyNotFound(cause) {
                         do {
                             let rdata = try JSONDecoder().decode(TPClose.self, from: stuff.data(using: .utf8)!)
                             self.thislog.debug("CLOSE DATA: \(rdata)")
                             if rdata.type == "close" {
                                 if let dh = self.keymap["close"] {
                                     self.thislog.debug("CALL HANDLER FOR close")
-                                    _ = dh("")
+                                    _ = dh([])
                                 }
                             }
                         } catch {
@@ -170,10 +133,39 @@ class TPPlugin {
                     } catch {
                         self.thislog.error("EEEE \(error)")
                     }
-                } else {
-                    self.thislog.debug("REQUEST FAIL/TIMEOUT")
+                } catch {
+                
+                    self.thislog.error("RRRR \(error)")
                 }
-            } while true
+            }
+            return
         }
+        self.tpclient?.onReady = {
+            // Connection successful 🎉
+            self.thislog.debug("TP Connection OK")
+            let pairer = TPPair(id: plugid)
+            do {
+                let pj1 = try JSONEncoder().encode(pairer)
+                if let pj2 = String(data: pj1, encoding: .utf8) {
+                    self.tpclient!.send(data: (pj2 + "\n").data(using: .utf8)!)
+                } else {
+                    self.thislog.error("encoding failure")
+                }
+            } catch {
+                self.thislog.error("Failure!!!!")
+            }
+        }
+        
+        self.tpclient?.ender = {
+            error in
+            if let err = error {
+                AppDelegate.alert("Touch Portal connection failed: \(err)")
+            } else {
+                AppDelegate.alert("Touch Portal connection lost")
+            }
+        }
+        self.tpclient?.start()
+        
     }
+
 }
