@@ -56,18 +56,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        let menubar: UIElement = try! app.attribute(.menuBar)!
+        
         let fullname = context.joined(separator: ".") + "." + name
         
         if let xelement = clickable[fullname] {
             keyseq = code
             applog.debug("cached menu click: \(fullname)")
-            try! xelement.performAction(.pick)
-            wait()
-            usleep(50000)
-            return
+            do {
+                try xelement.performAction(.pick)
+                wait()
+                usleep(50000)
+                return
+            } catch {
+                applog.error("Menu click failed: \(error)")
+                clickable[fullname] = nil
+            }
+            
         }
         
+        let menubar: UIElement = try! app.attribute(.menuBar)!
         let mitems: [AXUIElement] = try! menubar.attribute(.children)!
        
         // NSLog("Menu XXX \(mitems)")
@@ -105,6 +112,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
         }
+        applog.debug("MENU: context \(context) found: seek \(name) in \(uilist)")
         
         /*
          if we get here, we've found the context: all we need to do is click
@@ -112,7 +120,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         for lua_x in uilist {
             let lua = UIElement(lua_x)
             let luas: NSString = try! lua.attribute(.title)!
-            // applog.debug("LUA \(luas)")
+            applog.debug("MENU: target element title \(luas) in \(lua)")
             if luas.isEqual(name) {
                 applog.debug("MENU ITEM ATTR: \(try! lua.attributes())")
                 keyseq = code
@@ -122,7 +130,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 usleep(50000)
             }
         }
-        
     }
     
     func doBox(app: AXSwift.Application, code: String) {
@@ -145,7 +152,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             if let xmem = mem {
                 do {
-                    if try! xmem.attributeIsSupported(.title) {
+                    if try xmem.attributeIsSupported(.title) {
                         let wtitle: String? = try xmem.attribute(.title)
                         if let xtitle = wtitle {
                             if xtitle.isEqual("OK") {
@@ -208,9 +215,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         if let button = statusItem.button {
-            button.image = NSImage(named: NSImage.Name("fcontrol"))
+            button.image = NSImage(named: NSImage.Name("icon_32x32"))
+            button.image?.size = NSMakeSize(18.0,18.0)
             // button.action = #selector(applog.debugQuote(_:))
         }
+        
+        applog.info("FinaleControl: resources in \(String(describing: Bundle.main.resourcePath))")
         
         var theport: UInt16 = UInt16(defaults.integer(forKey: "FCIPport"))
         if theport == 0 {
@@ -232,6 +242,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     return false
                 }
             }
+            xplug.addhandler(key: "com.music3149.jsplugin.cat_action3.focus") {
+                _ in
+                applog.debug("FOCUS HANDLER")
+                if let xapp = self.finale {
+                    do {
+                        try xapp.setAttribute(.frontmost, value: true)
+                    } catch {
+                        applog.error("Finale went away")
+                        AppDelegate.alert("Finale went away")
+                    }
+                    return true
+                } else {
+                    return false
+                }
+            }
             xplug.addhandler(key: "com.music3149.jsplugin.cat_action2.menu") {
                 code in
                 applog.debug("MENU HANDLER: \(code)")
@@ -241,15 +266,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 for cc in code {
                     if cc.id == "com.music3149.jsplugin.cat_action2.context" {
                         context = cc.value.components(separatedBy: "|")
-                        //applog.debug("MENU CONTEXT: \(context)")
+                        applog.debug("MENU CONTEXT: \(context)")
                     } else if cc.id == "com.music3149.jsplugin.cat_action2.target" {
                         target = cc.value
-                        //applog.debug("MENU TARGET: \(target)")
+                        applog.debug("MENU TARGET: \(target)")
                     }
                 }
                 
                 if let xapp = self.finale {
-                    //self.triggered = true
+                    // self.triggered = true
                     self.clickItem(app: xapp, context: context, name: target, code: "")
                     return true
                 } else {
@@ -320,8 +345,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 // your function here
                 // check for Finale
                 self.finale = Application.allForBundleID("com.makemusic.Finale26").first
-                applog.debug("APP ATTRS: \(try! self.finale?.attributes())")
-                try! self.finale?.setAttribute(.frontmost, value: true)
+                applog.debug("APP ATTRS: \(try? self.finale?.attributes())")
+                try? self.finale?.setAttribute(.frontmost, value: true)
                 // self.clickItem(app: app, name: "JetStream Finale Controller")
             }
         }.catch { error in
@@ -365,8 +390,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 if xbundle.isEqual("com.makemusic.Finale26") {
                     // self.clickItem(app: self.finale, name: "JetStream Finale Controller")
                     self.finale = Application.allForBundleID("com.makemusic.Finale26").first
-                    applog.debug("NEW APP ATTRS: \(try! self.finale?.attributes())")
-                    try! self.finale?.setAttribute(.frontmost, value: true)
+                    do {
+                        applog.debug("NEW APP ATTRS: \(try self.finale?.attributes())")
+                        try self.finale?.setAttribute(.frontmost, value: true)
+                    } catch {
+                        applog.error("Set Finale frontmost fail: \(error)")
+                    }
                 }
             }
             
@@ -445,9 +474,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return
     }
     
+    @objc func showAbout(_ sender: Any?) {
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String
+        let appBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as! String
+        let copyright = CFXMLCreateStringByUnescapingEntities(nil, "&#169;2020 Music3149" as CFString, nil)! as String
+        AppDelegate.alert("FinaleControl\nversion \(appVersion) build \(appBuild)\n\(copyright)")
+    }
+    
     func constructMenu() {
         let menu = NSMenu()
 
+        menu.addItem(NSMenuItem(title: "About FinaleControl", action: #selector(AppDelegate.showAbout(_:)), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Settings...", action: #selector(AppDelegate.showSettings(_:)), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Add to Touch Portal...", action: #selector(AppDelegate.makePlugin(_:)), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Connect to Touch Portal...", action: #selector(AppDelegate.startPlugin(_:)), keyEquivalent: ""))

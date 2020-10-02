@@ -1,0 +1,74 @@
+{
+    "sdk":2,
+    "version":6,
+    "name":"DK Touch Portal Plugin",
+    "id":"com.music3149.jsplugin",
+    "configuration":{
+        "colorDark":"#203060",
+        "colorLight":"#4070F0"
+    },
+    "plugin_start_cmd":"/usr/bin/open {{applocation}}",
+    "categories":[
+        {
+            "id":"com.music3149.jsplugin.cat",
+            "name":"Call JetStream Action",
+            "imagepath":"%TP_PLUGIN_FOLDER%JSPlugin/fc-icon-wb-24.png",
+            "actions":[
+                {
+                    "id":"com.music3149.jsplugin.cat_action1.luacode",
+                    "name":"Finale JetStream Action",
+                    "prefix":"Lua Code",
+                    "type":"communicate",
+                    "description":"Lua Code",
+                    "tryInline":"true",
+                    "format":"Code = {$com.music3149.jsplugin.cat_action1.luacode.data.text$}",
+                    "data":[
+                        {
+                            "id":"com.music3149.jsplugin.cat_action1.luacode.data.text",
+                            "type":"text",
+                            "label":"text",
+                            "default":""
+                        }
+                    ]
+                },
+                {
+                    "id":"com.music3149.jsplugin.cat_action3.focus",
+                    "name":"Finale Focus",
+                    "prefix":"Grab",
+                    "type":"communicate",
+                    "description":"Grab Focus",
+                    "tryInline":"true"
+                },
+                {
+                    "id":"com.music3149.jsplugin.cat_action2.menu",
+                    "name":"Finale Menu Action",
+                    "prefix":"Plugin",
+                    "type":"communicate",
+                    "description":"Menu Item",
+                    "tryInline":"true",
+                    "format":"Context = {$com.music3149.jsplugin.cat_action2.context$}; Target = {$com.music3149.jsplugin.cat_action2.target$}",
+                    "data":[
+                        {
+                            "id":"com.music3149.jsplugin.cat_action2.context",
+                            "type":"text",
+                            "label":"text",
+                            "default":""
+                        },
+                        {
+                            "id":"com.music3149.jsplugin.cat_action2.target",
+                            "type":"text",
+                            "label":"text",
+                            "default":""
+                        }
+                    ]
+                }
+            ],
+            "states":[
+                
+            ],
+            "events":[
+                
+            ]
+        }
+    ]
+}

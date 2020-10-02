@@ -10,6 +10,9 @@
 		21C112A752C211CDB61DD38C /* Pods_FinaleControl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B67B97A02DEFB5D264F37E5 /* Pods_FinaleControl.framework */; };
 		631137B924F1D0CB0082DF52 /* TCPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 631137B824F1D0CB0082DF52 /* TCPClient.swift */; };
 		631137BA24F1D0CB0082DF52 /* ClientConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 631137B724F1D0CB0082DF52 /* ClientConnection.swift */; };
+		631B545D24F741E100FA3E16 /* fc-icon-wb-24.png in Resources */ = {isa = PBXBuildFile; fileRef = 631B545C24F741E100FA3E16 /* fc-icon-wb-24.png */; };
+		632E65D7251822E600C204BD /* icon_32x32@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 632E65D6251822E600C204BD /* icon_32x32@2x.png */; };
+		632E65D92518237D00C204BD /* fc-icon-wb.png in Resources */ = {isa = PBXBuildFile; fileRef = 632E65D82518237D00C204BD /* fc-icon-wb.png */; };
 		632F549824DE7A73009137A8 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632F549724DE7A73009137A8 /* ViewController.swift */; };
 		632F549F24DF5337009137A8 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 632F549C24DF4C72009137A8 /* index.html */; };
 		63864E4E24E8888B004ECC6D /* TPPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63864E4D24E8888B004ECC6D /* TPPlugin.swift */; };
@@ -48,6 +51,10 @@
 		5FCBCF983F325202EB1100C1 /* Pods-FinaleControl.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FinaleControl.release.xcconfig"; path = "Target Support Files/Pods-FinaleControl/Pods-FinaleControl.release.xcconfig"; sourceTree = "<group>"; };
 		631137B724F1D0CB0082DF52 /* ClientConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientConnection.swift; sourceTree = "<group>"; };
 		631137B824F1D0CB0082DF52 /* TCPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCPClient.swift; sourceTree = "<group>"; };
+		631B545C24F741E100FA3E16 /* fc-icon-wb-24.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "fc-icon-wb-24.png"; sourceTree = "<group>"; };
+		631B545E24F7423500FA3E16 /* fc-icon-wb-24.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "fc-icon-wb-24.png"; path = "Resources/fc-icon-wb-24.png"; sourceTree = "<group>"; };
+		632E65D6251822E600C204BD /* icon_32x32@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_32x32@2x.png"; sourceTree = "<group>"; };
+		632E65D82518237D00C204BD /* fc-icon-wb.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "fc-icon-wb.png"; sourceTree = "<group>"; };
 		632F549724DE7A73009137A8 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		632F549C24DF4C72009137A8 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		632F549E24DF4FC1009137A8 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = index.html; path = Resources/index.html; sourceTree = "<group>"; };
@@ -119,7 +126,10 @@
 		632F549B24DF4B3C009137A8 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				632E65D82518237D00C204BD /* fc-icon-wb.png */,
+				632E65D6251822E600C204BD /* icon_32x32@2x.png */,
 				63864E4F24E89397004ECC6D /* entry.tp */,
+				631B545C24F741E100FA3E16 /* fc-icon-wb-24.png */,
 				639DD0C024E2030C00F4A879 /* WebAssets */,
 				632F549C24DF4C72009137A8 /* index.html */,
 			);
@@ -129,6 +139,7 @@
 		63941D9424DCB29900A9C06A = {
 			isa = PBXGroup;
 			children = (
+				631B545E24F7423500FA3E16 /* fc-icon-wb-24.png */,
 				639DD0C124E203E500F4A879 /* WebAssets */,
 				632F549E24DF4FC1009137A8 /* index.html */,
 				632F549B24DF4B3C009137A8 /* Resources */,
@@ -320,9 +331,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				632E65D7251822E600C204BD /* icon_32x32@2x.png in Resources */,
+				631B545D24F741E100FA3E16 /* fc-icon-wb-24.png in Resources */,
 				639DD0C224E203E500F4A879 /* WebAssets in Resources */,
 				632F549F24DF5337009137A8 /* index.html in Resources */,
 				63864E5024E89397004ECC6D /* entry.tp in Resources */,
+				632E65D92518237D00C204BD /* fc-icon-wb.png in Resources */,
 				63941DAB24DCB29C00A9C06A /* Main.storyboard in Resources */,
 				63941DA824DCB29C00A9C06A /* Preview Assets.xcassets in Resources */,
 				63941DA524DCB29C00A9C06A /* Assets.xcassets in Resources */,
@@ -496,7 +510,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -550,7 +564,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -567,7 +581,7 @@
 				CODE_SIGN_ENTITLEMENTS = FinaleControl/FinaleControl.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_ASSET_PATHS = "\"FinaleControl/Preview Content\"";
 				DEVELOPMENT_TEAM = 235985W3SD;
 				ENABLE_PREVIEWS = YES;
@@ -577,7 +591,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.music3149.FinaleControl;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
@@ -592,7 +606,7 @@
 				CODE_SIGN_ENTITLEMENTS = FinaleControl/FinaleControl.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_ASSET_PATHS = "\"FinaleControl/Preview Content\"";
 				DEVELOPMENT_TEAM = 235985W3SD;
 				ENABLE_PREVIEWS = YES;
@@ -602,7 +616,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.music3149.FinaleControl;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;

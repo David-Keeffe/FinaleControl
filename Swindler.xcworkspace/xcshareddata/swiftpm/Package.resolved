@@ -1,0 +1,34 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "AXSwift",
+        "repositoryURL": "https://github.com/tmandry/AXSwift.git",
+        "state": {
+          "branch": "master",
+          "revision": "b4db10b2c28583f5c51033166be60a572ff39dcb",
+          "version": null
+        }
+      },
+      {
+        "package": "PromiseKit",
+        "repositoryURL": "https://github.com/mxcl/PromiseKit.git",
+        "state": {
+          "branch": "master",
+          "revision": "f6b15b7626a4399864ffa1d5ec2ed9cf0cea5556",
+          "version": null
+        }
+      },
+      {
+        "package": "Swifter",
+        "repositoryURL": "https://github.com/httpswift/swifter.git",
+        "state": {
+          "branch": "stable",
+          "revision": "ca7a1ec09864be922352a2451a43434d5802de11",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}

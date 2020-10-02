@@ -8,6 +8,12 @@
 
 import Foundation
 
+/**
+ This encapsulates the startup and teardown of a Touch Portal plugin.
+ 
+ It uses the local class TCPClient to manage the connection and conversation
+ */
+
 class TPPlugin {
     var tpclient: TCPClient?
     typealias Callback = (_ code: [TPPlugin.TPRequestData]) -> Bool
@@ -20,6 +26,12 @@ class TPPlugin {
     var tpport: UInt16
     var tpplugid: String
     var owner: AppDelegate?
+    var connected = false
+    
+    /**
+            Set of Codable types that represent the dialog between Touch Portal and this plugin
+            Not all types are represented yet.
+     */
 
     struct TPPair: Codable {
         var type = "pair"
@@ -51,6 +63,14 @@ class TPPlugin {
         var actionId: String
         var data: [TPRequestData]
     }
+    
+    /**
+            initialises the instance with the address and port, and optionally the delegate
+     
+            - Parameter address: string with DNS name or dotted-quad IP address
+            - Parameter port: IPV4 port number
+            - Parameter owner: optional AppDelegate, currently not used
+     */
 
     init(address: String, port: UInt16, owner: AppDelegate?) {
         if let tppresent = defaults.string(forKey: "FCTPLocation") {
@@ -83,22 +103,50 @@ class TPPlugin {
         self.thislog.debug("ADD HANDLER: \(key) with \(String(describing: handler))")
         self.keymap[key] = handler
     }
+    
+    /*
+     install this app as a Touch Portal plugin
+     */
 
     func install() {
         if let resPath = Bundle.main.resourcePath {
-            let tpdescriptor = resPath + "/entry.tp"
+            let desc = "/entry.tp"
+            let icon = "/fc-icon-wb-24.png"
+            let applocation = Bundle.main.bundlePath
+            let tpdescriptor = resPath +  desc
+            let tpicon = resPath + icon
             do {
                 try FileManager.default.createDirectory(atPath: self.pluginlocation, withIntermediateDirectories: true)
-                try FileManager.default.copyItem(atPath: tpdescriptor, toPath: self.pluginlocation + "/entry.tp")
+                if (FileManager.default.fileExists(atPath: self.pluginlocation + desc)) {
+                    try FileManager.default.removeItem(atPath: self.pluginlocation + desc)
+                }
+                // fill in the app location for TP to be able to start it
+                let descdata = try String(contentsOfFile: tpdescriptor)
+                let targetdesc = descdata.replacingOccurrences(of: "{{applocation}}", with: applocation)
+                try targetdesc.write(toFile: self.pluginlocation + desc, atomically: false, encoding: .utf8)
+                
+                //try FileManager.default.copyItem(atPath: tpdescriptor, toPath: self.pluginlocation + desc)
+                if (FileManager.default.fileExists(atPath: self.pluginlocation + icon)) {
+                    try FileManager.default.removeItem(atPath: self.pluginlocation + icon)
+                }
+                try FileManager.default.copyItem(atPath: tpicon, toPath: self.pluginlocation + icon)
 
             } catch {
                 self.thislog.info("Create plugin folder or copy failed: \(error)")
             }
         }
     }
+    
+    /*
+     set up the plugin according to current settings and the connect it to Touch Portal
+     */
 
     func start(plugid: String) {
         self.tpplugid = plugid
+        if self.connected {
+            self.thislog.info("Starting already running TP client")
+            return
+        }
         self.tpclient?.receiver = {
             data in
             if let stuff = String(bytes: data, encoding: .utf8) {
@@ -140,8 +188,10 @@ class TPPlugin {
             }
             return
         }
+        // set up the initial connection handler
         self.tpclient?.onReady = {
             // Connection successful 🎉
+            self.connected = true
             self.thislog.debug("TP Connection OK")
             let pairer = TPPair(id: plugid)
             do {
@@ -152,10 +202,10 @@ class TPPlugin {
                     self.thislog.error("encoding failure")
                 }
             } catch {
-                self.thislog.error("Failure!!!!")
+                self.thislog.error("Pairing Failure!!!! \(error)")
             }
         }
-        
+        // set up the shutdown handler
         self.tpclient?.ender = {
             error in
             if let err = error {
@@ -163,7 +213,9 @@ class TPPlugin {
             } else {
                 AppDelegate.alert("Touch Portal connection lost")
             }
+            self.connected = false
         }
+        // off we go!
         self.tpclient?.start()
         
     }
