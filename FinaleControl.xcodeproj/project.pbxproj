@@ -581,7 +581,7 @@
 				CODE_SIGN_ENTITLEMENTS = FinaleControl/FinaleControl.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_ASSET_PATHS = "\"FinaleControl/Preview Content\"";
 				DEVELOPMENT_TEAM = 235985W3SD;
 				ENABLE_PREVIEWS = YES;
@@ -606,7 +606,7 @@
 				CODE_SIGN_ENTITLEMENTS = FinaleControl/FinaleControl.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_ASSET_PATHS = "\"FinaleControl/Preview Content\"";
 				DEVELOPMENT_TEAM = 235985W3SD;
 				ENABLE_PREVIEWS = YES;

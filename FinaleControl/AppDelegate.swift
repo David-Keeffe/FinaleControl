@@ -17,14 +17,17 @@ func dispatchAfter(delay: TimeInterval, block: DispatchWorkItem) {
     DispatchQueue.main.asyncAfter(deadline: time, execute: block)
 }
 
+// https://eastmanreference.com/complete-list-of-applescript-key-codes
+// OBS! The codes are not quite sequential.
+
 let keymap: [String: UInt16] = [
     "0": 0x1d,
     "1": 0x12,
     "2": 0x13,
     "3": 0x14,
     "4": 0x15,
-    "5": 0x16,
-    "6": 0x17,
+    "5": 0x17,
+    "6": 0x16,
     "7": 0x1a,
     "8": 0x1c,
     "9": 0x19
